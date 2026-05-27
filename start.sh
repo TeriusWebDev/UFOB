@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════╗${RESET}"
-echo -e "${GREEN}║   RU Digital UFOB  —  Iniciando...   ║${RESET}"
+echo -e "${GREEN}║  Marmitaria Nobre Sabor — Iniciando  ║${RESET}"
 echo -e "${GREEN}╚══════════════════════════════════════╝${RESET}"
 echo ""
 

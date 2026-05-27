@@ -25,7 +25,7 @@ export default function ValidarPage() {
   const [digits, setDigits] = useState(['', '', '', ''])
   const [estado, setEstado] = useState<Estado>('idle')
   const [mensagem, setMensagem] = useState('')
-  const [pedido, setPedido] = useState<PedidoInfo | null>(null)
+  const [pedidos, setPedidos] = useState<PedidoInfo[]>([])
   const inputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -64,7 +64,7 @@ export default function ValidarPage() {
   const validar = async () => {
     if (codigo.length !== 4) return
     setEstado('loading')
-    setPedido(null)
+    setPedidos([])
 
     const res = await fetch('/api/atendente/validar', {
       method: 'POST',
@@ -75,23 +75,25 @@ export default function ValidarPage() {
     const data = await res.json()
 
     if (!res.ok) {
-      setPedido(data.pedido ?? null)
-      setEstado(data.pedido?.status === 'RETIRADO' ? 'jaRetirado' : 'erro')
+      setPedidos(data.pedidos ?? [])
+      setEstado(data.pedidos?.every((p: PedidoInfo) => p.status === 'RETIRADO') ? 'jaRetirado' : 'erro')
       setMensagem(data.error ?? 'Erro ao validar.')
       return
     }
 
-    setPedido(data)
+    setPedidos(data.pedidos ?? [])
     setEstado('sucesso')
   }
 
   const reiniciar = () => {
     setDigits(['', '', '', ''])
     setEstado('idle')
-    setPedido(null)
+    setPedidos([])
     setMensagem('')
     setTimeout(() => inputRefs[0].current?.focus(), 100)
   }
+
+  const primeiroNome = pedidos[0]?.customer?.name ?? pedidos[0]?.guestName ?? null
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6">
@@ -106,7 +108,6 @@ export default function ValidarPage() {
             <label className="block text-sm font-medium text-gray-600 mb-3 text-center">
               Código de Retirada
             </label>
-            {/* 4-digit input */}
             <div className="flex gap-3 justify-center" onPaste={handlePaste}>
               {digits.map((d, idx) => (
                 <input
@@ -139,16 +140,19 @@ export default function ValidarPage() {
       </Card>
 
       {/* Sucesso */}
-      {estado === 'sucesso' && pedido && (
+      {estado === 'sucesso' && pedidos.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
             <CheckCircle className="w-8 h-8 text-green-600 flex-shrink-0" />
             <div>
               <p className="font-black text-green-800 text-lg">Retirada Confirmada!</p>
-              <p className="text-green-600 text-sm">Pedido marcado como retirado</p>
+              <p className="text-green-600 text-sm">
+                {pedidos.length === 1 ? '1 item retirado' : `${pedidos.length} itens retirados`}
+                {primeiroNome ? ` — ${primeiroNome}` : ''}
+              </p>
             </div>
           </div>
-          <PedidoCard pedido={pedido} />
+          <PedidosCard pedidos={pedidos} />
           <Button variant="secondary" fullWidth onClick={reiniciar}>
             <RotateCcw className="w-4 h-4" />
             Validar outro código
@@ -157,7 +161,7 @@ export default function ValidarPage() {
       )}
 
       {/* Já retirado */}
-      {estado === 'jaRetirado' && pedido && (
+      {estado === 'jaRetirado' && pedidos.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
             <XCircle className="w-8 h-8 text-yellow-600 flex-shrink-0" />
@@ -166,7 +170,7 @@ export default function ValidarPage() {
               <p className="text-yellow-700 text-sm">{mensagem}</p>
             </div>
           </div>
-          <PedidoCard pedido={pedido} />
+          <PedidosCard pedidos={pedidos} />
           <Button variant="secondary" fullWidth onClick={reiniciar}>
             <RotateCcw className="w-4 h-4" />
             Tentar novamente
@@ -204,38 +208,43 @@ export default function ValidarPage() {
   )
 }
 
-function PedidoCard({ pedido }: { pedido: PedidoInfo }) {
+function PedidosCard({ pedidos }: { pedidos: PedidoInfo[] }) {
+  const primeiro = pedidos[0]
+  const nome = primeiro.customer?.name ?? primeiro.guestName ?? '—'
+  const phone = primeiro.customer?.phone
+
   return (
     <Card>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="font-mono font-black text-green-700 text-2xl tracking-widest">
-            {pedido.codigoRetirada}
+            {primeiro.codigoRetirada}
           </span>
-          <Badge status={pedido.status} />
+          <Badge status={primeiro.status} />
         </div>
+
+        <div className="space-y-1 pb-2 border-b border-gray-100">
+          <Row label="Nome" value={nome} />
+          {phone && <Row label="WhatsApp" value={formatPhone(phone)} />}
+          {primeiro.origem && (
+            <Row label="Origem" value={primeiro.origem === 'SITE' ? 'Site' : 'WhatsApp'} />
+          )}
+          <Row label="Pedido em" value={formatarDataHora(new Date(primeiro.createdAt))} />
+          {primeiro.retiradoEm && (
+            <Row label="Retirado em" value={formatarDataHora(new Date(primeiro.retiradoEm))} green />
+          )}
+        </div>
+
         <div className="space-y-2">
-          <Row label="Nome" value={pedido.customer?.name ?? pedido.guestName ?? '—'} />
-          {pedido.customer?.phone && (
-            <Row label="WhatsApp" value={formatPhone(pedido.customer.phone)} />
-          )}
-          {pedido.origem && (
-            <Row label="Origem" value={pedido.origem === 'SITE' ? 'Site' : 'WhatsApp'} />
-          )}
-          <Row label="Refeição" value={pedido.menuItem.nome} />
-          <Row
-            label="Tipo"
-            value={TIPO_LABEL[pedido.menuItem.tipo] ?? pedido.menuItem.tipo}
-          />
-          <Row label="Horário" value={pedido.menuItem.horario} />
-          <Row label="Pedido em" value={formatarDataHora(new Date(pedido.createdAt))} />
-          {pedido.retiradoEm && (
-            <Row
-              label="Retirado em"
-              value={formatarDataHora(new Date(pedido.retiradoEm))}
-              green
-            />
-          )}
+          {pedidos.map((p, i) => (
+            <div key={p.id} className="flex items-center gap-2 text-sm">
+              <span className="text-gray-400 font-mono text-xs w-5">{i + 1}.</span>
+              <span className="font-semibold text-gray-800 flex-1">{p.menuItem.nome}</span>
+              <span className="text-xs text-gray-400">
+                {TIPO_LABEL[p.menuItem.tipo] ?? p.menuItem.tipo} · {p.menuItem.horario}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </Card>
@@ -254,7 +263,6 @@ function Row({ label, value, green }: { label: string; value: string; green?: bo
 }
 
 function formatPhone(phone: string) {
-  // 5577999990001 → +55 77 9 9999-0001
   const d = phone.replace(/\D/g, '')
   if (d.length === 13)
     return `+${d.slice(0, 2)} ${d.slice(2, 4)} ${d.slice(4, 5)} ${d.slice(5, 9)}-${d.slice(9)}`

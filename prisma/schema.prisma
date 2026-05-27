@@ -63,5 +63,5 @@ model Order {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  @@unique([codigoRetirada, dataStr])
+  @@index([codigoRetirada, dataStr])
 }

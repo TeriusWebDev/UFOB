@@ -1,13 +1,13 @@
 {
-  "name": "RU Digital - UFOB",
-  "short_name": "RU Digital",
-  "description": "Sistema de pedidos do Restaurante Universitário da UFOB",
+  "name": "Marmitaria Nobre Sabor",
+  "short_name": "Nobre Sabor",
+  "description": "Sistema de pedidos da Marmitaria Nobre Sabor",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#16a34a",
   "orientation": "portrait",
-  "categories": ["food", "education"],
+  "categories": ["food"],
   "icons": [
     {
       "src": "/icons/icon-192.png",

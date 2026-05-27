@@ -8,7 +8,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { formatarData, TIPO_LABEL } from '@/lib/utils'
+import { formatarData, TIPO_LABEL, dataStrHoje } from '@/lib/utils'
 
 interface MenuItem {
   id: string
@@ -25,30 +25,47 @@ interface MenuItem {
 
 const TIPOS = ['ALMOCO', 'JANTAR', 'LANCHE']
 
-const EMPTY_FORM = {
-  nome: '',
-  descricao: '',
-  foto: '',
-  tipo: 'ALMOCO',
-  data: new Date().toISOString().split('T')[0],
-  horario: '11:00 - 14:00',
-  vagas: '100',
+// Usa data local (não UTC) para evitar bug de fuso horário à noite
+function emptyForm() {
+  return {
+    nome: '',
+    descricao: '',
+    foto: '',
+    tipo: 'ALMOCO',
+    data: dataStrHoje(),
+    horario: '11:00 - 14:00',
+    vagas: '100',
+  }
 }
 
 export default function AtendenteCardapioPage() {
   const [items, setItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState('')
   const [modal, setModal] = useState<{ open: boolean; item: MenuItem | null }>({ open: false, item: null })
   const [sucesso, setSucesso] = useState(false)
 
-  const loadItems = () => {
+  const loadItems = async () => {
     setLoading(true)
-    fetch('/api/cardapio')
-      .then((r) => r.json())
-      .then((data) => { setItems(Array.isArray(data) ? data : []); setLoading(false) })
+    setErro('')
+    try {
+      const r = await fetch('/api/cardapio')
+      const data = await r.json()
+      if (!r.ok) {
+        setErro(data.error ?? 'Erro ao carregar cardápio.')
+        setItems([])
+      } else {
+        setItems(Array.isArray(data) ? data : [])
+      }
+    } catch {
+      setErro('Falha de conexão com o servidor.')
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(loadItems, [])
+  useEffect(() => { loadItems() }, [])
 
   const openAdd = () => setModal({ open: true, item: null })
   const openEdit = (item: MenuItem) => setModal({ open: true, item })
@@ -102,11 +119,17 @@ export default function AtendenteCardapioPage() {
         </div>
       )}
 
+      {erro && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          {erro}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />)}
         </div>
-      ) : items.length === 0 ? (
+      ) : items.length === 0 && !erro ? (
         <div className="text-center py-12 text-gray-400">
           <p>Nenhum item no cardápio hoje.</p>
           <p className="text-sm mt-1">Clique em "Adicionar" para criar refeições.</p>
@@ -317,7 +340,7 @@ function ItemModal({
     nome: item?.nome ?? '',
     descricao: item?.descricao ?? '',
     tipo: item?.tipo ?? 'ALMOCO',
-    data: item?.data ? item.data.split('T')[0] : new Date().toISOString().split('T')[0],
+    data: item?.data ? item.data.split('T')[0] : dataStrHoje(),
     horario: item?.horario ?? '11:00 - 14:00',
     vagas: String(item?.vagas ?? 100),
   })

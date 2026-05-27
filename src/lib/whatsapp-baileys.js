@@ -61,7 +61,7 @@ async function initWhatsApp() {
       },
       printQRInTerminal: false,
       logger: pino({ level: 'silent' }),
-      browser: ['RU Digital UFOB', 'Chrome', '120.0.0'],
+      browser: ['Marmitaria Nobre Sabor', 'Chrome', '120.0.0'],
       generateHighQualityLinkPreview: false,
       syncFullHistory: false,
     })
@@ -296,7 +296,7 @@ async function handleSelecao(phone, num) {
 async function criarPedidoESendCodigo(phone, customer, menuItemId) {
   const item = await db.menuItem.findUnique({
     where: { id: menuItemId },
-    include: { _count: { select: { orders: true } } },
+    include: { _count: { select: { orders: { where: { status: { not: 'CANCELADO' } } } } } },
   })
   if (!item || !item.disponivel) {
     await sendMsg(phone, '😔 Item indisponível. Digite *menu* para ver outras opções.')
@@ -331,7 +331,7 @@ async function criarPedidoESendCodigo(phone, customer, menuItemId) {
 async function sendMenu(phone) {
   const items = await getCardapioHoje()
   if (items.length === 0) {
-    await sendMsg(phone, '👋 Olá! Bem-vindo ao *RU Digital UFOB*.\n\n😕 Não há itens no cardápio hoje. Volte mais tarde!')
+    await sendMsg(phone, '👋 Olá! Bem-vindo à *Marmitaria Nobre Sabor*.\n\n😕 Não há itens no cardápio hoje. Volte mais tarde!')
     return
   }
   const dataFmt = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })
@@ -342,7 +342,7 @@ async function sendMenu(phone) {
     if (!byTipo[item.tipo]) byTipo[item.tipo] = []
     byTipo[item.tipo].push({ ...item, idx })
   })
-  let msg = `👋 *RU Digital UFOB*\n📅 _${dataFmt}_\n\n🍽️ *Cardápio de Hoje*\n`
+  let msg = `👋 *Marmitaria Nobre Sabor*\n📅 _${dataFmt}_\n\n🍽️ *Cardápio de Hoje*\n`
   for (const [tipo, tipoItems] of Object.entries(byTipo)) {
     msg += `\n*${tipoLabel[tipo] || tipo}*  ·  ⏰ ${tipoItems[0].horario}\n`
     for (const item of tipoItems) {
@@ -384,7 +384,7 @@ async function getCardapioHoje() {
   const end = new Date(); end.setHours(23, 59, 59, 999)
   return db.menuItem.findMany({
     where: { data: { gte: start, lte: end }, disponivel: true },
-    include: { _count: { select: { orders: true } } },
+    include: { _count: { select: { orders: { where: { status: { not: 'CANCELADO' } } } } } },
     orderBy: [{ tipo: 'asc' }, { nome: 'asc' }],
   })
 }

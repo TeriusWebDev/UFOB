@@ -1,7 +1,7 @@
 {
-  "name": "ru-digital-ufob",
+  "name": "marmitaria-nobre-sabor",
   "version": "1.0.0",
-  "description": "Sistema de pedidos do Restaurante Universitário UFOB",
+  "description": "Sistema de pedidos da Marmitaria Nobre Sabor",
   "private": true,
   "scripts": {
     "dev": "node server.js",

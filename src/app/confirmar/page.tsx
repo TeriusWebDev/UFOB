@@ -51,14 +51,17 @@ export default function ConfirmarPage() {
 
   const whatsappNum = waPhone
 
+  const codigoUnico = orders[0]?.codigoRetirada ?? ''
+
   const waMessage = [
-    '🛒 *Novo Pedido - RU Digital UFOB*',
+    '🛒 *Novo Pedido - Marmitaria Nobre Sabor*',
     `👤 *Nome:* ${guestName}`,
     `📅 ${data}`,
+    `🎫 *Código:* ${codigoUnico}`,
     '🍽️ *Itens:*',
     ...orders.map(
       (o, i) =>
-        `${['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'][i] ?? `${i + 1}.`} ${o.menuItem.nome} (${TIPO_LABEL[o.menuItem.tipo] ?? o.menuItem.tipo} · ${o.menuItem.horario}) — 🎫 *${o.codigoRetirada}*`
+        `${['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'][i] ?? `${i + 1}.`} ${o.menuItem.nome} (${TIPO_LABEL[o.menuItem.tipo] ?? o.menuItem.tipo} · ${o.menuItem.horario})`
     ),
     '_Pedido feito pelo site._',
   ].join('\n')
@@ -84,8 +87,8 @@ export default function ConfirmarPage() {
               <Utensils className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-black text-gray-900 leading-none">RU Digital</p>
-              <p className="text-xs text-gray-400 leading-none">UFOB</p>
+              <p className="text-sm font-black text-gray-900 leading-none">Marmitaria</p>
+              <p className="text-xs text-gray-400 leading-none">Nobre Sabor</p>
             </div>
           </div>
         </div>
@@ -103,14 +106,28 @@ export default function ConfirmarPage() {
           </p>
         </div>
 
-        {/* Order codes */}
-        <div className="space-y-3 mb-8">
-          {orders.map((order, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center justify-between gap-3">
+        {/* Código único de retirada */}
+        <div className="bg-green-50 border-2 border-green-200 rounded-2xl px-6 py-5 mb-6 text-center">
+          <p className="text-xs text-green-600 font-semibold mb-1">Código de Retirada</p>
+          <p className="text-5xl font-black text-green-700 tracking-widest leading-none mb-2">
+            {codigoUnico}
+          </p>
+          <p className="text-xs text-green-600">Apresente este código na retirada</p>
+        </div>
+
+        {/* Lista de itens */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-8">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+            {orders.length === 1 ? '1 item' : `${orders.length} itens`}
+          </p>
+          <div className="space-y-3">
+            {orders.map((order, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="text-gray-300 font-mono text-xs w-5">{i + 1}.</span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tipoColor[order.menuItem.tipo] ?? 'bg-gray-100 text-gray-600'}`}>
+                  <p className="font-bold text-gray-900 text-sm leading-snug">{order.menuItem.nome}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${tipoColor[order.menuItem.tipo] ?? 'bg-gray-100 text-gray-600'}`}>
                       {TIPO_LABEL[order.menuItem.tipo] ?? order.menuItem.tipo}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -118,27 +135,17 @@ export default function ConfirmarPage() {
                       {order.menuItem.horario}
                     </span>
                   </div>
-                  <p className="font-bold text-gray-900 text-sm leading-snug">{order.menuItem.nome}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Apresente o código abaixo na retirada</p>
-                </div>
-                <div className="flex-shrink-0 text-center">
-                  <div className="bg-green-50 border-2 border-green-200 rounded-2xl px-4 py-3">
-                    <p className="text-xs text-green-600 font-semibold leading-none mb-1">Código</p>
-                    <p className="text-3xl font-black text-green-700 tracking-widest leading-none">
-                      {order.codigoRetirada}
-                    </p>
-                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* WhatsApp CTA */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
           <p className="text-sm font-semibold text-gray-700 mb-1">Confirme no WhatsApp</p>
           <p className="text-xs text-gray-500 mb-4">
-            Envie seu pedido para o WhatsApp do RU para garantir sua reserva.
+            Envie seu pedido para o WhatsApp da Marmitaria para garantir sua reserva.
           </p>
           <a
             href={waUrl}

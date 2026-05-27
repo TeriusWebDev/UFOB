@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, Plus, Check, Utensils, Clock, Users, ShieldCheck } from 'lucide-react'
+import { ShoppingCart, Plus, Utensils, Clock, Users, ShieldCheck } from 'lucide-react'
 import { CartDrawer } from '@/components/CartDrawer'
-import { useCart, CartItem } from '@/components/CartContext'
+import { useCart } from '@/components/CartContext'
 import { TIPO_LABEL } from '@/lib/utils'
 
 interface MenuItem {
@@ -20,7 +20,7 @@ interface MenuItem {
 }
 
 export default function HomePage() {
-  const { items: cartItems, add, remove, isInCart, count } = useCart()
+  const { add, remove, getQty, count } = useCart()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('TODOS')
@@ -41,20 +41,6 @@ export default function HomePage() {
     month: 'long',
   })
 
-  const toggle = (item: MenuItem) => {
-    if (isInCart(item.id)) {
-      remove(item.id)
-    } else {
-      add({
-        id: item.id,
-        nome: item.nome,
-        tipo: item.tipo,
-        horario: item.horario,
-        descricao: item.descricao,
-      })
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -65,8 +51,8 @@ export default function HomePage() {
               <Utensils className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-black text-gray-900 leading-none">RU Digital</p>
-              <p className="text-xs text-gray-400 leading-none">UFOB</p>
+              <p className="text-sm font-black text-gray-900 leading-none">Marmitaria</p>
+              <p className="text-xs text-gray-400 leading-none">Nobre Sabor</p>
             </div>
           </div>
 
@@ -130,13 +116,13 @@ export default function HomePage() {
             {filtered.map((item) => {
               const vagasRestantes = item.vagas - item._count.orders
               const esgotado = vagasRestantes <= 0
-              const inCart = isInCart(item.id)
+              const qty = getQty(item.id)
 
               return (
                 <div
                   key={item.id}
                   className={`bg-white rounded-2xl border transition-all overflow-hidden ${
-                    inCart ? 'border-green-400 shadow-md shadow-green-100' : 'border-gray-100 shadow-sm'
+                    qty > 0 ? 'border-green-400 shadow-md shadow-green-100' : 'border-gray-100 shadow-sm'
                   }`}
                 >
                   {/* Item photo */}
@@ -169,32 +155,54 @@ export default function HomePage() {
                         )}
                       </div>
 
-                      {/* Add / Remove button */}
-                      <button
-                        onClick={() => !esgotado && toggle(item)}
-                        disabled={esgotado}
-                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-sm transition-all ${
-                          esgotado
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : inCart
-                            ? 'bg-green-600 text-white'
-                            : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
-                        }`}
-                      >
-                        {esgotado ? (
-                          'Esgotado'
-                        ) : inCart ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            Adicionado
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4" />
-                            Adicionar
-                          </>
-                        )}
-                      </button>
+                      {/* Controle de quantidade */}
+                      {esgotado ? (
+                        <button
+                          disabled
+                          className="flex-shrink-0 px-3 py-2 rounded-xl font-semibold text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
+                        >
+                          Esgotado
+                        </button>
+                      ) : qty === 0 ? (
+                        <button
+                          onClick={() => add({
+                            id: item.id,
+                            nome: item.nome,
+                            tipo: item.tipo,
+                            horario: item.horario,
+                            descricao: item.descricao,
+                          })}
+                          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-sm bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-all"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Adicionar
+                        </button>
+                      ) : (
+                        <div className="flex-shrink-0 flex items-center gap-1">
+                          <button
+                            onClick={() => remove(item.id)}
+                            className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold text-lg leading-none transition-colors"
+                          >
+                            −
+                          </button>
+                          <span className="w-7 text-center font-black text-green-700 text-base tabular-nums">
+                            {qty}
+                          </span>
+                          <button
+                            onClick={() => qty < vagasRestantes && add({
+                              id: item.id,
+                              nome: item.nome,
+                              tipo: item.tipo,
+                              horario: item.horario,
+                              descricao: item.descricao,
+                            })}
+                            disabled={qty >= vagasRestantes}
+                            className="w-8 h-8 bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-gray-100 disabled:text-gray-400 rounded-lg flex items-center justify-center text-white font-bold text-lg leading-none transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

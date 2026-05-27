@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Trash2, MessageCircle, Loader2, ChevronRight } from 'lucide-react'
+import { X, MessageCircle, Loader2, ChevronRight } from 'lucide-react'
 import { useCart } from './CartContext'
 import { TIPO_LABEL } from '@/lib/utils'
 
@@ -13,7 +13,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const router = useRouter()
-  const { items, remove, clear } = useCart()
+  const { items, add, remove, clear } = useCart()
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,7 +40,10 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     const res = await fetch('/api/pedidos/publico', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ guestName: name.trim(), itemIds: items.map((i) => i.id) }),
+      body: JSON.stringify({
+        guestName: name.trim(),
+        items: items.map((i) => ({ id: i.id, qty: i.quantity })),
+      }),
     })
 
     const data = await res.json()
@@ -115,12 +118,24 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                       <span className="text-xs text-gray-400">{item.horario}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => remove(item.id)}
-                    className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {/* Stepper */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => remove(item.id)}
+                      className="w-7 h-7 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold text-base leading-none transition-colors"
+                    >
+                      −
+                    </button>
+                    <span className="w-6 text-center font-black text-green-700 text-sm tabular-nums">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => add({ id: item.id, nome: item.nome, tipo: item.tipo, horario: item.horario, descricao: item.descricao })}
+                      className="w-7 h-7 bg-green-600 hover:bg-green-700 active:bg-green-800 rounded-lg flex items-center justify-center text-white font-bold text-base leading-none transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

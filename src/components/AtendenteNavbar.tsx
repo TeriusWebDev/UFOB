@@ -14,8 +14,8 @@ export function AtendenteNavbar() {
           <Link href="/atendente" className="flex items-center gap-2">
             <ChefHat className="w-5 h-5 text-green-300" />
             <div>
-              <p className="text-xs text-green-300 leading-none">RU Digital</p>
-              <p className="text-sm font-bold leading-none">UFOB</p>
+              <p className="text-xs text-green-300 leading-none">Marmitaria</p>
+              <p className="text-sm font-bold leading-none">Nobre Sabor</p>
             </div>
           </Link>
 

@@ -90,7 +90,7 @@ app.prepare().then(async () => {
   })
     .once('error', (err) => { console.error(err); process.exit(1) })
     .listen(port, () => {
-      console.log(`\n🍽️  RU Digital UFOB iniciado!`)
+      console.log(`\n🍽️  Marmitaria Nobre Sabor iniciado!`)
       console.log(`   Local: http://${hostname}:${port}`)
       console.log(`   Ambiente: ${dev ? 'desenvolvimento' : 'produção'}\n`)
     })

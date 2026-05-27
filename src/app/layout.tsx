@@ -6,13 +6,13 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'RU Digital - UFOB',
-  description: 'Sistema de pedidos do Restaurante Universitário da UFOB',
+  title: 'Marmitaria Nobre Sabor',
+  description: 'Sistema de pedidos da Marmitaria Nobre Sabor',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'RU Digital',
+    title: 'Nobre Sabor',
   },
 }
 
