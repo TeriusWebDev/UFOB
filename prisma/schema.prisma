@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  name      String
+  matricula String   @unique
+  password  String
+  role      String   @default("ATENDENTE")
+  createdAt DateTime @default(now())
+}
+
+model ConversationState {
+  phone         String   @id
+  state         String   @default("IDLE")
+  pendingItemId String?
+  updatedAt     DateTime @updatedAt
+}
+
+model MenuItem {
+  id         String   @id @default(cuid())
+  nome       String
+  descricao  String?
+  foto       String?
+  tipo       String
+  data       DateTime
+  horario    String
+  disponivel Boolean  @default(true)
+  vagas      Int      @default(50)
+  preco      Float    @default(0)
+  createdAt  DateTime @default(now())
+  orders     Order[]
+}
+
+model Order {
+  id             String    @id @default(cuid())
+  codigoRetirada String
+  dataStr        String
+  // Pedido pelo WhatsApp bot (tem Customer) OU pelo site (tem guestName)
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
+  guestName      String?
+  menuItemId     String
+  menuItem       MenuItem  @relation(fields: [menuItemId], references: [id])
+  status         String    @default("CONFIRMADO")
+  observacao     String?
+  origem         String    @default("SITE")  // "SITE" | "WHATSAPP"
+  retiradoEm     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([codigoRetirada, dataStr])
+}
